@@ -6,94 +6,111 @@
 #include <stdlib.h>
 #define allocate(size) malloc(size)
 
-#define Item1 data[0]
-#define Item2 data[1]
-#define Item3 data[2]
-#define Item4 data[3]
-
 typedef enum {
-	FingerTreeEmpty,
-	FingerTreeSingle,
-	FingerTreeDeep
+	FingerTreeEmptyType,
+	FingerTreeSingleType,
+	FingerTreeDeepType
 } FingerTreeType;
 
 typedef enum {
-	NodeTwo,
-	NodeThree
+	NodeTwoType,
+	NodeThreeType
 } NodeType;
-
-typedef enum {
-	FingerOne = 1,
-	FingerTwo = 2,
-	FingerThree = 3,
-	FingerFour = 4,
-	FingerCount,
-} FingerType;
-
-#define EMBEDDED_ARRAY 0
-
-typedef struct { 
-	FingerType type;
-	void *data[EMBEDDED_ARRAY];
- } Finger;
-
-typedef struct EmptyEmbedded {
-} EmptyEmbedded;
-
-EmptyEmbedded EmptyTreeSingleton;
-
-typedef struct SingleEmbedded { 
-	void *a;
-} SingleEmbedded;
 
 typedef struct {
 	NodeType type;
-	void *data[EMBEDDED_ARRAY];
+	void *Item1;
+	void *Item2;
+} NodeTwo;
+
+typedef struct {
+	NodeType type;
+	void *Item1;
+	void *Item2;
+	void *Item3;
+} NodeThree;
+
+typedef struct {
+	NodeType type;
 } Node;
 
-struct FingerTree;
+typedef enum {
+	FingerOneType = 1,
+	FingerTwoType = 2,
+	FingerThreeType = 3,
+	FingerFourType = 4,
+	FingerCount,
+} FingerType;
 
-typedef struct DeepEmbedded {
-	Finger left;
-	struct FingerTree *node;
-	Finger right;
-} DeepEmbedded;
+#define FingerTree_ARRAY 0
+
+typedef struct { 
+	FingerType type;
+ } Finger;
+
+typedef struct { 
+	FingerType type;
+	void *Item1;
+ } FingerOne;
+
+typedef struct { 
+	FingerType type;
+	void *Item1;
+	void *Item2;
+ } FingerTwo;
+
+typedef struct { 
+	FingerType type;
+	void *Item1;
+	void *Item2;
+	void *Item3;
+ } FingerThree;
+
+typedef struct { 
+	FingerType type;
+	void *Item1;
+	void *Item2;
+	void *Item3;
+	void *Item4;
+ } FingerFour;
+
+typedef struct EmptyFingerTree {
+	FingerTreeType type;
+} EmptyFingerTree;
+
+EmptyFingerTree EmptyTreeSingleton;
+
+typedef struct SingleFingerTree { 
+	FingerTreeType type;
+	void *a;
+} SingleFingerTree;
 
 typedef struct FingerTree { 
 	FingerTreeType type;
-	void *data[EMBEDDED_ARRAY];
 } FingerTree;
 
-#define SingleTree(tree) (*(SingleEmbedded *) &((tree)->data))
-#define EmptyTree(tree) (*(EmptyEmbedded *) &((tree)->data))
-#define DeepTree(tree) (*(DeepEmbedded *) &((tree)->data))
+typedef struct DeepFingerTree {
+	FingerTreeType type;
+	Finger left;
+	FingerTree *node;
+	Finger right;
+} DeepFingerTree;
+
+
+#define SingleTree(tree) (*(SingleFingerTree *) &((tree)->data))
+#define EmptyTree(tree) (*(EmptyFingerTree *) &((tree)->data))
+#define DeepTree(tree) (*(DeepFingerTree *) &((tree)->data))
 
 #define FingerSize(type) (sizeof(Finger) + ((type) - FingerOne + 1) * sizeof(void *))
 #define TreeSize(type)
 
+#define MakeFingerOne(a) ((const Finger *)((FingerOne) {FingerOneType, a}))
+#define MakeFingerTwo(a, b) ((const Finger *)((FingerTwo) {FingerTwoType, a, b}))
+#define MakeFingerThree(a, b, c) ((const Finger *)((FingerThree) {FingerThreeType, a, b, c}))
+#define MakeFingerFour(a, b, c, d) ((const Finger *)((FingerFour) {FingerFourType, a, b, c, d}))
 
-#define NamedConstructor(proper) \
-proper * \
-make ## proper (proper ## Type type, ...) { \
-	proper *item = allocate (sizeof(proper)); \
-	item->type = type; \
- \
-	va_list ap; \
- \
-	va_start (ap, type); \
-	for (int i = 0; i < type; i++) { \
-		item->data[i] = va_arg (ap, void *); \
-	} \
-	va_end (ap); \
- \
-	return item; \
-}
-
-NamedConstructor(FingerTree)
-
-NamedConstructor(Finger)
-
-NamedConstructor(Node)
+#define MakeNodeTwo(a, b) ((const Node *)((NodeTwo) {NodeTwoType, a, b}))
+#define MakeNodeThree(a, b, c) ((const Node *)((NodeThree) {NodeThreeType, a, b, c}))
 
 static void *
 bottom (void)
@@ -119,98 +136,108 @@ raiseEmpty (void)
 	return NULL;
 }
 
-Finger *
-node_to_finger (Node *node)
+const Finger *
+nodeToFinger (Node *node)
 {
 	switch (node->type) {
-		case NodeTwo:
-			return makeFinger(FingerThree,
-			node->data[0],
-			node->data[1]);
-		case NodeThree:
-			return makeFinger(FingerThree,
-			node->data[0],
-			node->data[1], 
-			node->data[2]);
+		case NodeTwoType: {
+			NodeTwo *in = (NodeTwo *)node;
+			return MakeFingerTwo (in->Item1, in->Item2);
+		}
+
+		case NodeThreeType: {
+			NodeThree *in = (NodeThree *)node;
+			return MakeFingerThree (in->Item1, in->Item2, in.Item3);
 			break;
+		}
+
 		default:
 			return bottom ();
-			bottom ();
 	};
 }
 
 void *
-peekFingerLeft (Finger const *finger)
+peekFingerLeft (const Finger *finger)
 {
-	return finger->data[0];
+	return finger->Item1;
 }
 
 void *
-peekFingerRight (Finger const *finger)
-{
-	return finger->data[finger->type - 1];
-}
-
-Finger *
-pushFingerLeft (Finger const *finger, void const *a)
+peekFingerRight (const Finger *finger)
 {
 	switch (finger->type)
 	{
 		case FingerOne:
-			return makeFinger(FingerTwo, a, finger->Item1);
+			return finger->Item1;
 		case FingerTwo:
-			return makeFinger(FingerThree, a, finger->Item1, finger->Item2);
+			return finger->Item2;
+		case FingerThree:
+			return finger->Item3;
+		case FingerFour:
+			return finger->Item4;
+	}
+}
+
+const Finger *
+pushFingerLeft (const Finger *finger, const void *a)
+{
+	switch (finger->type)
+	{
+		case FingerOne:
+			return (FingerTwo) {FingerTypeTwo, a, finger->Item1};
+		case FingerTwo:
+			return (FingerThree) {FingerTypeThree, a, finger->Item1, finger->Item2};
 			break;
 		case FingerThree:
-			return makeFinger(FingerFour, a, finger->Item1, finger->Item2, finger->Item2);
+			return (FingerFour) {FingerTypeFour, a, finger->Item1, finger->Item2, finger->Item2};
 		default:
 			return bottom ();
 	}
 }
 
-Finger *
-popFingerLeft (Finger const *finger)
-{
-	switch (finger->type)
-	{
-		case FingerOne:
-			return makeFinger(FingerTwo, finger->Item2);
-		case FingerThree:
-			return makeFinger(FingerTwo, finger->Item2, finger->Item3);
-		case FingerFour:
-			return makeFinger(FingerThree, finger->Item2, finger->Item3, finger->Item4);
-		default:
-			return bottom ();
-	}
-}
-
-Finger *
-pushFingerRight (Finger const *finger, void *b)
-{
-	switch (finger->type)
-	{
-		case FingerOne:
-			return makeFinger(FingerTwo, finger->Item1, b);
-		case FingerTwo:
-			return makeFinger(FingerThree, finger->Item1, finger->Item2, b);
-		case FingerThree:
-			return makeFinger(FingerFour, finger->Item1, finger->Item2, finger->Item2, b);
-		default:
-			return bottom ();
-	}
-}
-
-Finger *
-popFingerRight (Finger const *finger)
+const Finger *
+popFingerLeft (const Finger *finger)
 {
 	switch (finger->type)
 	{
 		case FingerTwo:
-			return makeFinger(FingerTwo, finger->Item1);
+			return MakeFingerOne(finger->Item2);
 		case FingerThree:
-			return makeFinger(FingerTwo, finger->Item1, finger->Item2);
+			return MakeFingerTwo(finger->Item2, finger->Item3);
 		case FingerFour:
-			return makeFinger(FingerThree, finger->Item1, finger->Item2, finger->Item3);
+			return MakeFingerThree(finger->Item2, finger->Item3, finger->Item4);
+		default:
+			return bottom ();
+	}
+}
+
+const Finger *
+pushFingerRight (const Finger *finger, const void *b)
+{
+	switch (finger->type)
+	{
+		case FingerOne:
+			return MakeFingerTwo(finger->Item1, b);
+		case FingerTwo:
+			return MakeFingerThree(finger->Item1, finger->Item2, b);
+		case FingerThree:
+			return MakeFingerFour(finger->Item1, finger->Item2, finger->Item2, b);
+		default:
+			return bottom ();
+	}
+}
+
+const Finger *
+popFingerRight (const Finger *finger)
+{
+	switch (finger->type)
+	{
+		case FingerTwo:
+			return MakeFingerOne(finger->Item1);
+		case FingerThree:
+			return MakeFingerTwo(finger->Item1, finger->Item2);
+		case FingerFour:
+			return MakeFingerThree(finger->Item1, finger->Item2, finger->Item3);
 		default:
 			return bottom ();
 	}
@@ -218,177 +245,163 @@ popFingerRight (Finger const *finger)
 
 
 void *
-peekTreeLeft (FingerTree const *tree)
+peekTreeLeft (const FingerTree *tree)
 {
 	switch(tree->type) {
-		case FingerTreeEmpty:
+		case FingerTreeEmptyType:
 			return raiseEmpty ();
-		case FingerTreeSingle: {
-			SingleEmbedded s = SingleTree(tree);
-			return s.a;
-		}
-		case FingerTreeDeep:
+		case FingerTreeSingleType:
+			return ((SingerFingerTree *)tree)->a;
+		case FingerTreeDeepType:
 			return peekFingerLeft(&DeepTree(tree).left);
 	}
 }
 
 void *
-peekTreeRight (FingerTree const *tree)
+peekTreeRight (const FingerTree *tree)
 {
 	switch(tree->type) {
-		case FingerTreeEmpty:
+		case FingerTreeEmptyType:
 			return raiseEmpty ();
-		case FingerTreeSingle:
+		case FingerTreeSingleType:
 			return SingleTree(tree).a;
-		case FingerTreeDeep:
+		case FingerTreeDeepType:
 			return peekFingerRight(&DeepTree(tree).right);
 	}
 }
 
 void *
-pushTreeLeft (FingerTree const *tree, void const *a)
+pushTreeLeft (const FingerTree *tree, const void *a)
 {
 	switch(tree->type) {
-		case FingerTreeEmpty:
-			return makeFingerTree(FingerTreeSingle, a);
-		case FingerTreeSingle: {
+		case FingerTreeEmptyType:
+			return makeFingerTreeSingle(a);
+
+		case FingerTreeSingleType: {
 			Finger *left = makeFinger(FingerOne, a);
 			Finger *right = makeFinger(FingerOne, SingleTree(tree).a);
-			return makeFingerTree(FingerTreeDeep, left, EmptyTreeSingleton, right);
+			return MakeFingerTreeDeep(left, EmptyTreeSingleton, right);
 		}
-		case FingerTreeDeep: {
-			Finger *left = NULL;
-			FingerTree *node = NULL;
 
+		case FingerTreeDeepType: {
 			const Finger *currLeft = &DeepTree(tree).left;
 			const Finger *currRight = &DeepTree(tree).right;
 
 			if (currLeft->type == FingerFour) {
-				left = makeFinger (FingerTwo, a, currLeft->Item1);
-				Node *rest = makeNode (NodeThree, currLeft->Item2, currLeft->Item3, currLeft->Item4);
-				node = pushTreeLeft (DeepTree(tree).node, rest);
-			} else {
-				left = pushFingerLeft(a, currLeft);
-				node = DeepTree(tree).node;
-			}
+				const Finger *left = makeFinger (FingerTwo, a, currLeft->Item1);
+				const Node *rest = makeNode (NodeThreeType, currLeft->Item2, currLeft->Item3, currLeft->Item4);
+				const FingerTree *node = pushTreeLeft (DeepTree(tree).node, rest);
+				return MakeFingerTreeDeep(left, node, currRight);
 
-			return makeFingerTree(FingerTreeDeep, left, node, currRight);
+			} else {
+				const Finger *left = pushFingerLeft(a, currLeft);
+				const FingerTree *node = DeepTree(tree).node;
+				return MakeFingerTreeDeep(left, node, currRight);
+			}
 		}
 	}
 }
 
 void *
-popTreeLeft (FingerTree const *tree)
+popTreeLeft (const FingerTree *tree)
 {
 	switch(tree->type) {
-		case FingerTreeEmpty:
+		case FingerTreeEmptyType:
 			return raiseEmpty ();
-		case FingerTreeSingle: {
-			return makeFingerTree(FingerTreeEmpty);
+		case FingerTreeSingleType: {
+			return MakeFingerTreeEmpty();
 		}
-		case FingerTreeDeep: {
-			Finger *left = NULL;
-			Finger *right = NULL;
-			FingerTree *node = NULL;
-
+		case FingerTreeDeepType: {
 			const Finger *currLeft = &DeepTree(tree).left;
 			const Finger *currRight = &DeepTree(tree).right;
 			const FingerTree *currNode = DeepTree(tree).node;
 
 			if (currLeft->type == FingerOne) {
-				if (currNode->type == FingerTreeEmpty && currRight->type == FingerOne) {
-					return makeFingerTree (FingerTreeSingle, currRight->Item1);
-				} else if (currNode->type == FingerTreeEmpty) {
-					left = makeFinger (FingerOne, peekFingerLeft(currRight));
-					right = popFingerLeft (currRight);
-					node = currNode;
+				if (currNode->type == FingerTreeEmptyType && currRight->type == FingerOne) {
+					return MakeFingerTreeSingle(currRight->Item1);
+				} else if (currNode->type == FingerTreeEmptyType) {
+					const Finger *left = makeFinger (FingerOne, peekFingerLeft(currRight));
+					const Finger *right = popFingerLeft (currRight);
+					return MakeFingerTreeDeep(left, currNode, right);
 				} else {
-					left = nodeToFinger (peekTreeLeft (currNode));
-					node = popTreeLeft (currNode);
-					right = currRight;
+					const Finger *left = nodeToFinger (peekTreeLeft (currNode));
+					const FingerTree *node = popTreeLeft (currNode);
+					return MakeFingerTreeDeep(left, node, currRight);
 				}
 			} else {
-				left = popFingerLeft(currLeft);
-				node = currNode;
-				right = currRight;
+				const Finger *left = popFingerLeft(currLeft);
+				return MakeFingerTreeDeepType(left, currNode, currRight);
 			}
 
-			return makeFingerTree(FingerTreeDeep, left, node, right);
 		}
 	}
 }
 
 
 void *
-pushTreeRight (FingerTree const *tree, void const *a)
+pushTreeRight (const FingerTree *tree, const void *a)
 {
 	switch(tree->type) {
-		case FingerTreeEmpty:
-			return makeFingerTree(FingerTreeSingle, a);
-		case FingerTreeSingle: {
-			Finger *right = makeFinger(FingerOne, a);
-			Finger *left = makeFinger(FingerOne, SingleTree(tree).a);
-			return makeFingerTree(FingerTreeDeep, left, EmptyTreeSingleton, right);
+		case FingerTreeEmptyType:
+			return makeFingerTreeSingle(a);
+		case FingerTreeSingleType: {
+			Finger *right = MakeFingerOne(a);
+			Finger *left = MakeFingerOne(SingleTree(tree).a);
+			return makeFingerTreeTreeDeep(left, EmptyTreeSingleton, right);
 		}
-		case FingerTreeDeep: {
-			FingerTree *right = NULL;
-			FingerTree *node = NULL;
-
-			Finger *currRight = &DeepTree(tree).left;
+		case FingerTreeDeepType: {
+			const Finger *currRight = &DeepTree(tree).left;
+			const Finger *left = &DeepTree(tree).left;
 
 			if (currRight->type == FingerFour) {
-				right = makeFinger (FingerTwo, a, currRight->Item4);
-				Node *rest = makeNode (NodeThree, currRight->Item1, currRight->Item2, currRight->Item3);
-				node = pushTreeRight (DeepTree(tree).node, rest);
+				const Finger *right = makeFinger (FingerTwo, a, currRight->Item4);
+				const Node *rest = makeNode (NodeThreeType, currRight->Item1, currRight->Item2, currRight->Item3);
+				const FingerTree *node = pushTreeRight (DeepTree(tree).node, rest);
+				return makeFingerTreeTreeDeep(left, node, right);
 			} else {
-				right = pushFingerRight(a, currRight);
-				node = DeepTree(tree).node;
+				const Finger *right = pushFingerRight(currRight, a);
+				const FingerTree *node = DeepTree(tree).node;
+				return makeFingerTreeTreeDeep(left, node, right);
 			}
-
-			FingerTree *left = &DeepTree(tree).left;
-
-			return makeFingerTree(FingerTreeDeep, left, node, right);
 		}
 	}
 }
 
 void *
-popTreeRight (FingerTree const *tree)
+popTreeRight (const FingerTree *tree)
 {
 	switch(tree->type) {
-		case FingerTreeEmpty:
+		case FingerTreeEmptyType:
 			return raiseEmpty ();
-		case FingerTreeSingle: {
-			return makeFingerTree(FingerTreeEmpty);
+		case FingerTreeSingleType: {
+			return makeFingerTree(FingerTreeEmptyType);
 		}
-		case FingerTreeDeep: {
-			Finger *left = NULL;
-			Finger *right = NULL;
-			FingerTree *node = NULL;
-
+		case FingerTreeDeepType: {
 			const Finger *currLeft = &DeepTree(tree).left;
 			const Finger *currRight = &DeepTree(tree).right;
-			const FingerTree *currNode = &DeepTree(tree).node;
+			FingerTree **currNode = &DeepTree(tree).node;
 
 			if (currRight->type == FingerOne) {
-				if (currNode->type == FingerTreeEmpty && currLeft->type == FingerOne) {
-					return makeFingerTree (FingerTreeSingle, currLeft->Item1);
-				} else if (currNode->type == FingerTreeEmpty) {
-					left = makeFinger (FingerOne, peekFingerRight(currLeft));
-					right = popFingerRight (currLeft);
-					node = currNode;
+
+				if ((*currNode)->type == FingerTreeEmptyType && currLeft->type == FingerOne) {
+					return makeFingerTree (FingerTreeSingleType, currLeft->Item1);
+
+				} else if ((*currNode)->type == FingerTreeEmptyType) {
+					const Finger *left = makeFinger (FingerOne, peekFingerRight(currLeft));
+					const Finger *right = popFingerRight (currLeft);
+					return makeFingerTreeTreeDeep(left, *currNode, right);
+
 				} else {
-					left = nodeToFinger (peekTreeRight (currNode));
-					node = popTreeRight (currNode);
-					left = currLeft;
+					const Finger *left = nodeToFinger (peekTreeRight (*currNode));
+					const FingerTree *node = popTreeRight (*currNode);
+					return makeFingerTreeTreeDeep(left, node, currRight);
 				}
+
 			} else {
-				left = popFingerRight (currRight);
-				node = currNode;
-				left = currLeft;
+				const Finger *right = popFingerRight (currRight);
+				return makeFingerTreeTreeDeep(currLeft, *currNode, right);
 			}
 
-			return makeFingerTree(FingerTreeDeep, left, node, right);
 		}
 	}
 }
@@ -401,7 +414,7 @@ typedef struct {
 	void *next;
 } Stack;
 
-typedef void *mapper (void *closure, void *current_data);
+typedef void *mapper (const void *closure, const void *current_data);
 
 #define foldTree { \
 	Stack curr; \
@@ -412,9 +425,9 @@ typedef void *mapper (void *closure, void *current_data);
 	Stack stackLet; \
  \
 	while (top != NULL) { \
-		if (tree->type == FingerTreeEmpty) { \
+		if (tree->type == FingerTreeEmptyType) { \
 			continue; \
-		} else if(tree->type == FingerTreeSingle) { \
+		} else if(tree->type == FingerTreeSingleType) { \
 			iter(SingleTree(tree).a); \
 			continue; \
 		} \
@@ -456,7 +469,7 @@ typedef void *mapper (void *closure, void *current_data);
 }\
 
 void
-foldTreeLeft (FingerTree const *tree, mapper iter)
+foldTreeLeft (const FingerTree *tree, mapper iter)
 {
 #define foldTreeIter(side) \
 for (int i = 0; i < top->deep.side.type; i++) \
@@ -468,7 +481,7 @@ foldTree
 }
 
 void
-foldTreeRight (FingerTree const *tree, mapper iter)
+foldTreeRight (const FingerTree *tree, mapper iter)
 {
 #define foldTreeIter(side) \
 		for (int i = top->deep.side->type - 1; i >= 0; i--) \
