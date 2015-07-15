@@ -300,7 +300,7 @@ popTreeLeft (FingerTree const *tree)
 					return makeFingerTree (FingerTreeSingle, currRight->Item1);
 				} else if (currNode->type == FingerTreeEmpty) {
 					left = makeFinger (FingerOne, peekFingerLeft(currRight));
-					right = popFingersLeft (currRight);
+					right = popFingerLeft (currRight);
 					node = currNode;
 				} else {
 					left = nodeToFinger (peekTreeLeft (currNode));
@@ -375,7 +375,7 @@ popTreeRight (FingerTree const *tree)
 					return makeFingerTree (FingerTreeSingle, currLeft->Item1);
 				} else if (currNode->type == FingerTreeEmpty) {
 					left = makeFinger (FingerOne, peekFingerRight(currLeft));
-					right = popFingersRight (currLeft);
+					right = popFingerRight (currLeft);
 					node = currNode;
 				} else {
 					left = nodeToFinger (peekTreeRight (currNode));
@@ -394,7 +394,7 @@ popTreeRight (FingerTree const *tree)
 }
 
 // TODO: Get finger tree with count and use count here
-#define INITIAL_STACKLET_SIZE 10;
+#define INITIAL_STACKLET_SIZE 10
 
 typedef struct {
 	FingerTree trees [INITIAL_STACKLET_SIZE];
@@ -449,7 +449,7 @@ typedef void *mapper (void *closure, void *current_data);
 			} \
 		top = top->next; \
 		if (top) { \
-			/* Don't free base of stack, which is on our function's call frame */
+			/* Don't free base of stack, which is on our function's call frame */ \
 			free (curr); \
 		}\
 	} \
